@@ -1,0 +1,231 @@
+import java_cup.runtime.*;
+//import java.io.*;
+/* Parser code to change the way the parser reports errors (include
+   line and column number of the error). */
+parser code  {:
+  public void report_error(String message, Object info) {
+    StringBuilder m = new StringBuilder("Error ");
+
+    if (info instanceof java_cup.runtime.Symbol)
+      m.append( "("+info.toString()+")" );
+
+    m.append(" : "+message);
+
+    System.out.println(m);
+  }
+
+  public void report_fatal_error(String message, Object info) {
+    report_error(message, info);
+    throw new RuntimeException("Fatal Syntax Error");
+  }
+:};
+
+terminal        VOID, BOOLEAN, INT, FLOAT;                                  // Type
+terminal        PLUS, MINUS, TIMES, DIV;                                    // Arithmetic Operators
+terminal        IF, ELSE, FOR, WHILE, BREAK, CONTINUE;                      // Keyword stmt
+terminal        RETURN;                                                     // Return Statement
+terminal        EQEQ, NOTEQ;                                                // Equality Operators
+terminal        EQ;                                                         // Assignment Operator
+terminal        OROR, ANDAND, NOT;                                          // Logical Operators
+terminal        LT, GT, LTEQ, GTEQ;                                         // Relational Operators
+terminal        LBRACE, RBRACE, LPAREN, RPAREN, LBRACK, RBRACK, SEMI, COMMA;// Separators {}   ()   []   ;    ,
+
+terminal Integer    INTLITERAL;
+terminal Boolean    BOOLLITERAL;
+terminal String     STRINGLITERAL, ID;
+terminal Float      FLOATLITERAL;
+
+nonterminal program, func_decl, var_decl, init_declarator_list, init_declarator, declarator, initialiser, expr_list, expr;
+nonterminal type, identifier, compound_stmt, compound, stmt;
+nonterminal if_stmt, else_stmt, for_stmt, while_stmt, break_stmt, continue_stmt, return_stmt, expr_stmt;
+nonterminal assignment_expr, cond_or_expr, cond_and_expr, equality_expr, rel_expr, additive_expr,multiplicative_expr, unary_expr, primary_expr;
+nonterminal para_list, proper_para_list, para_decl, arg_list, proper_arg_list, arg;
+
+precedence left PLUS, MINUS;
+precedence left TIMES, DIV;
+precedence left ELSE;
+
+start with program;
+
+program             ::= func_decl
+                        |
+                        var_decl;   // TODO
+
+// declarations
+//func-decl           -> type identifier para-list compound-stmt
+func_decl           ::= type identifier para_list compound_stmt;
+
+//var-decl            -> type init-declarator-list ";"
+var_decl            ::= type init_declarator_list SEMI;
+
+//init-declarator-list-> init-declarator ( "," init-declarator )*
+init_declarator_list::= init_declarator
+                    |   init_declarator_list COMMA init_declarator;
+
+//init-declarator     -> declarator ( "=" initialiser )?
+init_declarator     ::= declarator
+                    |   declarator EQ initialiser;
+
+//declarator          -> identifier
+//                    |  identifier "[" INTLITERAL? "]"
+declarator          ::= identifier
+                    |   identifier LBRACK RBRACK
+                    |   identifier LBRACK INTLITERAL RBRACK;
+
+//initialiser         ::= expr
+//                    |  "{" expr ( "," expr )* "}"
+initialiser         ::= expr
+                        |
+                        LBRACE expr_list RBRACE;
+
+expr_list           ::= expr
+                        |
+                        expr_list COMMA expr;
+// primitive types
+type                ::= VOID | BOOLEAN | INT | FLOAT;
+
+// identifiers
+identifier          ::= ID;
+
+// statements
+//compound-stmt       ::= "{" var-decl* stmt* "}"
+compound_stmt       ::= LBRACE compound RBRACE;
+compound            ::= var_decl
+                    |   stmt
+                    |   stmt compound
+                    |   var_decl compound;
+
+stmt                ::= compound_stmt
+                    |   if_stmt
+                    |   for_stmt
+                    |   while_stmt
+                    |   break_stmt
+                    |   continue_stmt
+                    |   return_stmt
+                    |   expr_stmt;
+
+//if_stmt             ::= if "(" expr ")" stmt ( else stmt )?
+if_stmt             ::= IF LPAREN expr RPAREN stmt
+                    |   IF LPAREN expr RPAREN stmt ELSE stmt;
+
+//for-stmt            -> for "(" expr? ";" expr? ";" expr? ")" stmt
+for_stmt            ::= FOR LPAREN expr_stmt expr_stmt expr_stmt RPAREN stmt;
+
+//while_stmt          ::= while "(" expr ")" stmt
+while_stmt          ::= WHILE LPAREN expr RPAREN stmt;
+
+//break_stmt          ::= break ";"
+break_stmt          ::= BREAK SEMI;
+
+//continue_stmt       ::= continue ";"
+continue_stmt       ::= CONTINUE SEMI;
+
+//return-stmt         -> return expr? ";"
+return_stmt         ::= RETURN expr SEMI
+                    |   RETURN SEMI;
+
+//expr_stmt           ::= expr? ";"
+expr_stmt           ::= expr SEMI
+                    |   SEMI;
+
+// expressions
+//expr                ::= assignment_expr
+expr                ::= assignment_expr;
+
+//assignment_expr     ::= ( cond_or_expr "=" )* cond_or_expr
+assignment_expr     ::= LPAREN cond_or_expr EQ RPAREN cond_or_expr
+                    |   cond_or_expr;
+
+//cond_or_expr        ::= cond_and_expr
+//                    |  cond_or_expr "||" cond_and_expr
+cond_or_expr        ::= cond_and_expr
+                    |   cond_or_expr OROR cond_and_expr;
+
+//cond-and-expr       -> equality-expr
+//                    |  cond-and-expr "&&" equality-expr
+cond_and_expr       ::= equality_expr
+                    |   cond_and_expr ANDAND equality_expr;
+
+//equality_expr       ::= rel_expr
+//                    |  equality_expr "==" rel_expr
+//                    |  equality_expr "!=" rel_expr
+equality_expr       ::= rel_expr
+                    |   equality_expr EQEQ rel_expr
+                    |   equality_expr NOTEQ rel_expr;
+
+//rel_expr            ::= additive_expr
+//                    |  rel_expr "<" additive_expr
+//                    |  rel_expr "<=" additive_expr
+//                    |  rel_expr ">" additive_expr
+//                    |  rel_expr ">=" additive_expr
+rel_expr            ::= additive_expr
+                    |   rel_expr LT additive_expr
+                    |   rel_expr LTEQ additive_expr
+                    |   rel_expr GT additive_expr
+                    |   rel_expr GTEQ additive_expr;
+
+//additive_expr       ::= multiplicative_expr
+//                    |  additive_expr "+" multiplicative_expr
+//                    |  additive_expr "_" multiplicative_expr
+additive_expr       ::= multiplicative_expr
+                    |   additive_expr PLUS multiplicative_expr
+                    |   additive_expr MINUS multiplicative_expr;
+
+//multiplicative_expr ::= unary_expr
+//                    |  multiplicative_expr "*" unary_expr
+//                    |  multiplicative_expr "/" unary_expr
+multiplicative_expr ::= unary_expr
+                    |   multiplicative_expr TIMES unary_expr
+                    |   multiplicative_expr DIV unary_expr;
+
+//unary_expr          ::= "+" unary_expr
+//                    |  "_" unary_expr
+//                    |  "!" unary_expr
+//                    |  primary_expr
+unary_expr          ::= PLUS unary_expr
+                    |   MINUS unary_expr
+                    |   NOT unary_expr
+                    |   primary_expr;
+
+//primary_expr        ::= identifier arg_list?
+//                    | identifier "[" expr "]"
+//                    | "(" expr ")"
+//                    | INTLITERAL
+//                    | FLOATLITERAL
+//                    | BOOLLITERAL
+//                    | STRINGLITERAL
+primary_expr        ::= identifier
+                    |   identifier arg_list
+                    |   identifier LBRACK expr RBRACK
+                    |   LPAREN expr RPAREN
+                    |   INTLITERAL:e
+                    {:System.out.println("0"); :}
+                    |   FLOATLITERAL
+                    |   BOOLLITERAL
+                    |   STRINGLITERAL;
+
+//// parameters
+//para_list           ::= "(" proper_para_list? ")"
+para_list           ::= LPAREN proper_para_list RPAREN
+                    |   LPAREN RPAREN;
+
+//proper_para_list    ::= para_decl ( "," para_decl )*
+proper_para_list    ::= para_decl
+                    |   proper_para_list COMMA para_decl;
+
+//para_decl           ::= type declarator
+para_decl           ::= type declarator;
+
+//arg_list            ::= "(" proper_arg_list? ")"
+arg_list            ::= LPAREN proper_arg_list RPAREN
+                    |   LPAREN RPAREN;
+
+//proper_arg_list     ::= arg ( "," arg )*
+proper_arg_list     ::= arg
+                    |   proper_arg_list COMMA arg;
+
+//arg                 ::= expr
+arg                 ::= expr;
+
+
+

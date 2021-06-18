@@ -1,0 +1,13 @@
+int main(){
+    int a = 10;
+    bool b = false;
+    if (b || a >= 5){
+        int c = a*5;
+    } else {
+        float d = a; // error
+    }
+    /* comment 2 */
+
+    else
+    int b = {1, 2, 3, 4};
+}
