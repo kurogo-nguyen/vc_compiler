@@ -5,14 +5,15 @@
     └── src
         ├── main
         |   ├── cup
-        |   |   └── vc.cup              vocabulary, production rule
+        |   |   └── vc.cup              define vocabulary, production rule
         |   ├── java
         |   |   ├── Main.java           main func
         |   |   └── VCToken.java        define token
         |   └── jflex
-        |       └── vc.flex
+        |       └── vc.flex             define scanner
         └── test     
 
+## How to run
 To build:
 
     mvn compile
@@ -29,4 +30,4 @@ To package:
 
 The **package** phase does everything above and packages the jar archive of the Java classes. You can then run
 
-    java -jar target/vc_compiler-full-1.0-SNAPSHOT.jar src/test/data/test.txt
+    java -jar target/vc_compiler-full-1.0-SNAPSHOT.jar <path-to-test-file>
