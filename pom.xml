@@ -63,7 +63,7 @@
                 </executions>
                 <configuration>
                     <!-- By default runs:
-                    cup -destdir target/generated-sources/cup -parser parser -symbols sym src/main/cup/a.cup -->
+                    cup -destdir target/generated-sources/cup -parser parser -symbols sym src/main/cup/vc.cup -->
                 </configuration>
             </plugin>
 

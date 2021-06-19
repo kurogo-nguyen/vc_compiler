@@ -10,7 +10,7 @@ import java_cup.runtime.*;
 %line
 %char
 %column
-%function next_token
+//%function next_token
 %type VCToken
 //%debug
 
@@ -26,14 +26,34 @@ import java_cup.runtime.*;
 %}
 
 
-DIGIT = [0-9]
-CHAR = [a-zA-Z]
-IntegerLiteral = 0 | [1-9][0-9]*
-FLOAT = {DIGIT}"."{DIGIT}*
+Digit = [0-9]
+Letter = [a-zA-Z_]
+
+Identifier = {Letter} ({Letter} | {Digit})*
+IntLiteral = {Digit} {Digit}*
+/* floating point literals */
+FloatLiteral = {Digit}+ "."
+              | {Digit}* {Fraction} {Exponent}?
+              | {Digit}+ {Exponent}
+
+
+Fraction = \. {Digit}+
+Exponent = [eE] [+-]? {Digit}+
 
 LineTerminator = \r | \n | \r\n
 WhiteSpace = {LineTerminator} | [ \t\f]
-ID = [:jletter:][:jletterdigit:]*
+
+/*Comment*/
+TraditonalComment = "/*"~"*/"
+EndOfLineComment = "//" [^\n\r]*
+Comment = {TraditonalComment} | {EndOfLineComment}
+
+/* String */
+String = \"(\\.|[^\"])*\"
+
+%eofval{
+  return symbol(sym.EOF);
+%eofval}
 
 %state func
 
@@ -78,13 +98,15 @@ ID = [:jletter:][:jletterdigit:]*
       ")"                       {return symbol(sym.RPAREN);}
       ";"                       {return symbol(sym.SEMI);}
       ","                       {return symbol(sym.COMMA);}
-    // s
-      {ID}                      {return symbol(sym.ID);}
     // Literals
-      {IntegerLiteral}          {return symbol(sym.INTLITERAL);}
+      {IntLiteral}              {return symbol(sym.INTLITERAL);}
+      {FloatLiteral}            {return symbol(sym.FLOATLITERAL);}
+      "true"                    {return symbol(sym.BOOLLITERAL);}
+      "false"                   {return symbol(sym.BOOLLITERAL);}
+      // s
+      {Comment}                 {System.out.println(symbol(sym.COMMENT).toString());}
+      {String}                  {return symbol(sym.STRINGLITERAL);}
+      {Identifier}              {return symbol(sym.ID);}
+      {WhiteSpace}              {/* Do Nothing */}
+      .                         {return symbol(sym.error);}
 
-//        {Number}           {return symbol(sym.INTLITERAL, yytext()); }
-
-      {WhiteSpace}                {/* Do Nothing */}
-        .                         {return symbol(sym.error);}
-    <<EOF>>               {return symbol(sym.EOF, "EOF");}

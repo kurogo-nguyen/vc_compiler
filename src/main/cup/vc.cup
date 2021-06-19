@@ -3,7 +3,15 @@ import java_cup.runtime.*;
 /* Parser code to change the way the parser reports errors (include
    line and column number of the error). */
 parser code  {:
-  public void report_error(String message, Object info) {
+    Symbol token;
+    public Symbol scan() throws Exception{
+        if(token != null)
+            System.out.println(token.toString());
+        token = getScanner().next_token();
+        return token;
+    }
+
+    public void report_error(String message, Object info) {
     StringBuilder m = new StringBuilder("Error ");
 
     if (info instanceof java_cup.runtime.Symbol)
@@ -12,12 +20,12 @@ parser code  {:
     m.append(" : "+message);
 
     System.out.println(m);
-  }
+    }
 
-  public void report_fatal_error(String message, Object info) {
+    public void report_fatal_error(String message, Object info) {
     report_error(message, info);
     throw new RuntimeException("Fatal Syntax Error");
-  }
+    }
 :};
 
 terminal        VOID, BOOLEAN, INT, FLOAT;                                  // Type
@@ -31,11 +39,11 @@ terminal        LT, GT, LTEQ, GTEQ;                                         // R
 terminal        LBRACE, RBRACE, LPAREN, RPAREN, LBRACK, RBRACK, SEMI, COMMA;// Separators {}   ()   []   ;    ,
 
 terminal Integer    INTLITERAL;
-terminal Boolean    BOOLLITERAL;
-terminal String     STRINGLITERAL, ID;
+terminal java.lang.Boolean    BOOLLITERAL;
+terminal String     STRINGLITERAL, ID, COMMENT;
 terminal Float      FLOATLITERAL;
 
-nonterminal program, func_decl, var_decl, init_declarator_list, init_declarator, declarator, initialiser, expr_list, expr;
+nonterminal program, decl_list, func_decl, var_decl, init_declarator_list, init_declarator, declarator, initialiser, expr_list, expr;
 nonterminal type, identifier, compound_stmt, compound, stmt;
 nonterminal if_stmt, else_stmt, for_stmt, while_stmt, break_stmt, continue_stmt, return_stmt, expr_stmt;
 nonterminal assignment_expr, cond_or_expr, cond_and_expr, equality_expr, rel_expr, additive_expr,multiplicative_expr, unary_expr, primary_expr;
@@ -43,20 +51,25 @@ nonterminal para_list, proper_para_list, para_decl, arg_list, proper_arg_list, a
 
 precedence left PLUS, MINUS;
 precedence left TIMES, DIV;
+precedence nonassoc NOT, LT, LTEQ, GT, GTEQ, EQEQ, NOTEQ;
 precedence left ELSE;
+
+//precedence left ELSE;
 
 start with program;
 
-program             ::= func_decl
-                        |
-                        var_decl;   // TODO
+program             ::= decl_list;
+
+decl_list           ::= func_decl decl_list
+                    |   var_decl decl_list
+                    |   ;
 
 // declarations
 //func-decl           -> type identifier para-list compound-stmt
 func_decl           ::= type identifier para_list compound_stmt;
 
 //var-decl            -> type init-declarator-list ";"
-var_decl            ::= type init_declarator_list SEMI;
+var_decl            ::= type:t1 init_declarator_list SEMI;
 
 //init-declarator-list-> init-declarator ( "," init-declarator )*
 init_declarator_list::= init_declarator
@@ -82,7 +95,10 @@ expr_list           ::= expr
                         |
                         expr_list COMMA expr;
 // primitive types
-type                ::= VOID | BOOLEAN | INT | FLOAT;
+type                ::= VOID:t      {:RESULT = t;:}
+                    |   BOOLEAN:t   {:RESULT = t;:}
+                    |   INT:t       {:RESULT = t;:}
+                    |   FLOAT:t     {:RESULT = t;:};
 
 // identifiers
 identifier          ::= ID;
@@ -105,8 +121,9 @@ stmt                ::= compound_stmt
                     |   expr_stmt;
 
 //if_stmt             ::= if "(" expr ")" stmt ( else stmt )?
-if_stmt             ::= IF LPAREN expr RPAREN stmt
-                    |   IF LPAREN expr RPAREN stmt ELSE stmt;
+if_stmt             ::= IF LPAREN expr RPAREN stmt else_stmt;
+else_stmt           ::= ELSE stmt
+                    |   ;
 
 //for-stmt            -> for "(" expr? ";" expr? ";" expr? ")" stmt
 for_stmt            ::= FOR LPAREN expr_stmt expr_stmt expr_stmt RPAREN stmt;
@@ -198,8 +215,8 @@ primary_expr        ::= identifier
                     |   identifier arg_list
                     |   identifier LBRACK expr RBRACK
                     |   LPAREN expr RPAREN
-                    |   INTLITERAL:e
-                    {:System.out.println("0"); :}
+                    |   INTLITERAL
+                    {: :}
                     |   FLOATLITERAL
                     |   BOOLLITERAL
                     |   STRINGLITERAL;

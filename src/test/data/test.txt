@@ -1,13 +1,14 @@
 int main(){
     int a = 10;
-    bool b = false;
-    if (b || a >= 5){
+    float i;
+    // cscs\ dcs
+    // ádasd
+    boolean b = "1213s cs'c\t \b \n \f     dcs dfa";
+     /* cscs dcs */
+    if (b || a == 5){
         int c = a*5;
-    } else {
-        float d = a; // error
     }
-    /* comment 2 */
-
-    else
-    int b = {1, 2, 3, 4};
+    /* cscs
+    dcs */
+    int b[] = {1, 2, 3, 4};
 }

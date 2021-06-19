@@ -1,7 +1,8 @@
-import java_cup.runtime.*;
+import java_cup.runtime.Symbol;
 
-public class VCToken extends Symbol implements sym{
-    private int line, column;
+public class VCToken extends Symbol implements sym {
+    private final int line;
+    private final int column;
 
     public VCToken(int type, Object value, int line, int column) {
         super(type, value);
@@ -15,8 +16,8 @@ public class VCToken extends Symbol implements sym{
 
     @Override
     public String toString() {
-        return  "line: " + line +
-                ", column: " + column +
+        return "line: " + String.format("%-3s", line) +
+                ", column: " + String.format("%-3s", column) +
                 ", type: " + String.format("%-20s", terminalNames[this.sym]) +
                 (value == null ? "" : ", value: " + value);
     }
