@@ -1,8 +1,7 @@
 import java_cup.runtime.*;
 import java.util.*;
 import java.io.*;
-/* Parser code to change the way the parser reports errors (include
-   line and column number of the error). */
+
 parser code  {:
     String output = "";
 
@@ -27,7 +26,6 @@ parser code  {:
     public Symbol scan() throws Exception{
         if(cur_token!= null){
             output = output + cur_token.toString() + '\n';
-//            System.out.println(cur_token.toString());
             if(cur_token.sym==0){
                 OutputWriter();
             }
@@ -40,7 +38,7 @@ parser code  {:
 
         if (info instanceof java_cup.runtime.Symbol)
             m.append( "("+info.toString()+")" );
-            m.append(" : "+message);
+            m.append(" : "+message+'\n');
             System.out.println(m);
             output += m;
             OutputWriter();
