@@ -4,19 +4,21 @@ import java.io.*;
 /* Parser code to change the way the parser reports errors (include
    line and column number of the error). */
 parser code  {:
-    List<String> listID = new ArrayList<>();
     String output = "";
 
     private void OutputWriter(){
         try {
             File fileResult = new File("Lexical_analysis.out" );
             if (fileResult.createNewFile()){
-                System.out.println("Output file created");
+                System.out.println("Output file creating...");
+            } else {
+                System.out.println("Writing...");
             }
             FileWriter fileWriter = new FileWriter(fileResult);
             fileWriter.write(output);
             fileWriter.flush();
             fileWriter.close();
+            System.out.println("Done");
         } catch (Exception e) {
             throw new Error("File processing failed");
         }
@@ -25,10 +27,9 @@ parser code  {:
     public Symbol scan() throws Exception{
         if(cur_token!= null){
             output = output + cur_token.toString() + '\n';
-            System.out.println(cur_token.toString());
+//            System.out.println(cur_token.toString());
             if(cur_token.sym==0){
                 OutputWriter();
-                System.out.println(listID);
             }
         }
         return getScanner().next_token();
@@ -53,33 +54,42 @@ parser code  {:
 
 terminal        VOID, BOOLEAN, INT, FLOAT;                                  // Type
 terminal        PLUS, MINUS, TIMES, DIV;                                    // Arithmetic Operators + - * /
-terminal        IF, ELSE, FOR, WHILE, BREAK, CONTINUE;                      // Keyword stmt
-terminal        RETURN;                                                     // Return Statement
+terminal        IF, ELSE, FOR, WHILE, BREAK, CONTINUE, RETURN;              // Keyword
 terminal        EQEQ, NOTEQ;                                                // Equality Operators   == !=
 terminal        EQ;                                                         // Assignment Operator
 terminal        OROR, ANDAND, NOT;                                          // Logical Operators  || && !
 terminal        LT, GT, LTEQ, GTEQ;                                         // Relational Operators < > <= >=
 terminal        LBRACE, RBRACE, LPAREN, RPAREN, LBRACK, RBRACK, SEMI, COMMA;// Separators {}   ()   []   ;    ,
 
-terminal Integer    INTLITERAL;
-terminal Boolean    BOOLLITERAL;
-terminal String     STRINGLITERAL, ID, COMMENT;
-terminal Float      FLOATLITERAL;
+terminal Interger       INTLITERAL;
+terminal String         STRINGLITERAL, ID, COMMENT;
+terminal Boolean        BOOLLITERAL;
+terminal Float          FLOATLITERAL;
 
-nonterminal program, decl_list, func_decl, var_decl, init_declarator_list, init_declarator, declarator, initialiser, expr_list, expr;
+nonterminal program;
+/* declarations */
+nonterminal decl_list, func_decl, var_decl, init_declarator_list, init_declarator, declarator, initialiser, expr_list, expr;
+/* primitive types */
 nonterminal type, identifier, compound_stmt, compound, stmt;
+/* statements */
 nonterminal if_stmt, else_stmt, for_stmt, while_stmt, break_stmt, continue_stmt, return_stmt, expr_stmt;
+/* expressions */
 nonterminal assignment_expr, cond_or_expr, cond_and_expr, equality_expr, rel_expr, additive_expr,multiplicative_expr, unary_expr, primary_expr;
+/* parameters */
 nonterminal para_list, proper_para_list, para_decl, arg_list, proper_arg_list, arg;
 
+// thứ tự ưu tiên thấp -> cao
 precedence left PLUS, MINUS;
 precedence left TIMES, DIV;
 precedence nonassoc NOT, LT, LTEQ, GT, GTEQ, EQEQ, NOTEQ;
+precedence left LPAREN, RPAREN; // ()
+precedence left LBRACK, RBRACK; // []
+precedence left LBRACE, RBRACE; // {}
 precedence left ELSE;
 
 start with program;
 
-// VC grammar
+/* VC production rule */
 program             ::= decl_list;
 
 decl_list           ::= func_decl decl_list
@@ -88,47 +98,44 @@ decl_list           ::= func_decl decl_list
 
 // declarations
 //func-decl           -> type identifier para-list compound-stmt
-func_decl           ::= type identifier:id para_list compound_stmt
-                        {: if( String.valueOf(id)==""); :};
+func_decl           ::= type identifier:id para_list compound_stmt;
 
 //var-decl            -> type init-declarator-list ";"
 var_decl            ::= type:t1 init_declarator_list SEMI;
 
 //init-declarator-list-> init-declarator ( "," init-declarator )*
-init_declarator_list::= init_declarator:a {:System.out.println(a);:}
+init_declarator_list::= init_declarator
                     |   init_declarator COMMA init_declarator_list;
 
 //init-declarator     -> declarator ( "=" initialiser )?
 init_declarator     ::= declarator
-                    |   declarator:id EQ initialiser:var
-                        {:  RESULT = id;  :};
+                    |   declarator EQ initialiser;
 
 //declarator          -> identifier
 //                    |  identifier "[" INTLITERAL? "]"
 declarator          ::= identifier
-                    |   identifier:name LBRACK RBRACK
-                        {: listID.add(String.valueOf(name)); RESULT = name; :}
-                    |   identifier:name LBRACK INTLITERAL RBRACK
-                        {: listID.add(String.valueOf(name)); RESULT = name;:};
+                    |   identifier LBRACK RBRACK
+
+                    |   identifier LBRACK INTLITERAL RBRACK;
 
 //initialiser         ::= expr
 //                    |  "{" expr ( "," expr )* "}"
 initialiser         ::= expr
                         |
-                        LBRACE expr_list RBRACE
-                        {:RESULT = "list";:};
+                        LBRACE expr_list RBRACE;
+
 
 expr_list           ::= expr
                         |
                         expr COMMA expr_list;
 // primitive types
-type                ::= VOID:t      {:RESULT = t;:}
-                    |   BOOLEAN:t   {:RESULT = t;:}
-                    |   INT:t       {:RESULT = t;:}
-                    |   FLOAT:t     {:RESULT = t;:};
+type                ::= VOID
+                    |   BOOLEAN
+                    |   INT
+                    |   FLOAT;
 
 // identifiers
-identifier          ::= ID:name {:RESULT = name;:};
+identifier          ::= ID;
 
 // statements
 //compound-stmt       ::= "{" var-decl* stmt* "}"
@@ -243,18 +250,12 @@ primary_expr        ::= identifier
                     |   identifier arg_list
                     |   identifier LBRACK expr RBRACK
                     |   LPAREN expr RPAREN
-                    |   INTLITERAL:t
-                    {: :}
-                    |   FLOATLITERAL:t
-                    |   BOOLLITERAL:t
-//                    {:try{
-//                        boolean b = (boolean)t;
-//                    }catch (Exception e){
-//                        System.out.println(e);
-//                        report_fatal_error("type error:", null);}:}
-                    |   STRINGLITERAL:t;
+                    |   INTLITERAL
+                    |   FLOATLITERAL
+                    |   BOOLLITERAL
+                    |   STRINGLITERAL;
 
-//// parameters
+// parameters
 //para_list           ::= "(" proper_para_list? ")"
 para_list           ::= LPAREN proper_para_list RPAREN
                     |   LPAREN RPAREN;

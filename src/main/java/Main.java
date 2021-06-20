@@ -1,12 +1,10 @@
-//import java.io.*;
-
 import java.io.FileReader;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] argv) {
         /* Start the parser */
-        String file_path = "";
+        String file_path;
         if (argv.length == 0) {
             System.out.println("Enter path to process:");
             Scanner scanner = new Scanner(System.in);

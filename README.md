@@ -1,17 +1,23 @@
+## INT3402 20
+
 ## Content
 
     ├── pom.xml                         project object model to build with Maven
     ├── README.md                       this file
     └── src
-        ├── main
-        |   ├── cup
-        |   |   └── vc.cup              define vocabulary, production rule
-        |   ├── java
-        |   |   ├── Main.java           main func
-        |   |   └── VCToken.java        define token
-        |   └── jflex
-        |       └── vc.flex             define scanner
-        └── test     
+    |    ├── main
+    |    |   ├── cup
+    |    |   |   └── vc.cup              define vocabulary, production rule
+    |    |   ├── java
+    |    |   |   ├── Main.java           main func
+    |    |   |   └── VCToken.java        define VCToken
+    |    |   └── jflex
+    |    |       └── vc.flex             define scanner
+    |    └── test
+    |        └── data
+    |            └── test.txt            input test
+    ├── Lexical_analysis.out (option)    output file            
+    └── vc_compiler-full-1.0-SNAPSHOT    jar package build from this code
 
 ## How to run
 To build:

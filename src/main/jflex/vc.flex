@@ -4,40 +4,48 @@
 %class VC_Lexical
 
 %unicode
-//%cupsym testsym
-%cup
 
-%line
-%char
-%column
+%cup
 %type VCToken
 
 %{
-    boolean hasMainFunc = false;
     private VCToken symbol(int type) {
-        return new VCToken(type, yytext(), yyline, yycolumn);
+        return new VCToken(type, yytext());
+    }
+    private VCToken symbol(int type, String str){
+        return new VCToken(type, str.substring(1, str.length()-2));
     }
 
     private VCToken symbol(int type, Object value) {
-        return new VCToken(type, value, yyline, yycolumn, yytext());
+        return new VCToken(type, value, yytext());
     }
 %}
-
 
 Digit = [0-9]
 Letter = [a-zA-Z_]
 
+/* Identifier */
 Identifier = {Letter} ({Letter} | {Digit})*
+
+/* Int literal*/
 IntLiteral = {Digit} {Digit}*
-/* floating point literals */
+
+/* Float literals */
 FloatLiteral = {Digit}* {Fraction} {Exponent}?
               | {Digit}+ \.? {Exponent}
               | {Digit}+ "."
 
-
 Fraction = \. {Digit}+
 Exponent = [eE] [+-]? {Digit}+
 
+/* Bool literals*/
+BooleanLiteral = "true"|"false"
+
+/* String */
+EscapeSequences = "\\t"|"\\f"|"\\n"|"\\r"|"\\b"|"\\'"|"\\"| "\\\"" | \t | \f
+String = \" ({Letter}|{WhiteSpace}| {EscapeSequences})*\"
+
+/* Separated */
 LineTerminator = \r | \n | \r\n
 WhiteSpace = {LineTerminator} | [ \t\f]
 
@@ -45,17 +53,6 @@ WhiteSpace = {LineTerminator} | [ \t\f]
 TraditonalComment = "/*"~"*/"
 EndOfLineComment = "//" [^\n\r]*
 Comment = {TraditonalComment} | {EndOfLineComment}
-
-/* String */
-String = \"(\\.|[^\"])*\"
-
-BooleanLiteral = "true"|"false"
-
-%eofval{
-  return symbol(sym.EOF);
-%eofval}
-
-%state func
 
 %%
     /* Keywords */
@@ -104,14 +101,13 @@ BooleanLiteral = "true"|"false"
     {IntLiteral}              {return symbol(sym.INTLITERAL, Integer.valueOf(yytext()));}
     {FloatLiteral}            {return symbol(sym.FLOATLITERAL, Float.valueOf(yytext()));}
     {BooleanLiteral}          {return symbol(sym.BOOLLITERAL, Boolean.valueOf(yytext()));}
-    {String}                  {return symbol(sym.STRINGLITERAL);}
+    {String}                  {return symbol(sym.STRINGLITERAL, yytext());}
 
     /* Identifier */
-    {Identifier}\(\b          {return symbol(sym.ID);}
     {Identifier}              {return symbol(sym.ID);}
 
-    // separated
-    {Comment}                 {/* Do Nothing */} // need fix
-    {WhiteSpace}              {/* Do Nothing */}
+    // Separated
+    {Comment}|{WhiteSpace}    {/* Do Nothing */}
+    <<EOF>>                   {return symbol(sym.EOF);}
     .                         {return symbol(sym.error);}
 

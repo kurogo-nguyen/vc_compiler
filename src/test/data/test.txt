@@ -1,14 +1,21 @@
 int main(){
-    int a = 10;
-    float i;
-    // cscs\ dcs
-    // ádasd
-    boolean b = "1213s cs'c\t \b \n \f     dcs dfa";
-     /* cscs dcs */
-    if (b || a == 5){
+
+    // int test
+    int a1 = 1;
+    int a1[] = {10};
+
+    //float test
+    float f1[] = {1.2,   1.,  .1,   1e2,   1.2E+2,   1.2e-2,  .1E2};
+    float f2 = 1.2E+2;
+
+    //bool test
+    boolean b1 = false;
+    boolean b2[] = {false};
+
+    if (b || a1 == 5){
         int c = a*5;
     }
-    /* cscs
-    dcs */
+    /* cscs dcs */
+    putStringLn("group \t test");
     int b[] = {1, 2, 3, 4};
 }
