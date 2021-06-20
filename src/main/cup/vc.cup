@@ -1,45 +1,68 @@
 import java_cup.runtime.*;
-//import java.io.*;
+import java.util.*;
+import java.io.*;
 /* Parser code to change the way the parser reports errors (include
    line and column number of the error). */
 parser code  {:
-    Symbol token;
+    List<String> listID = new ArrayList<>();
+    String output = "";
+
+    private void OutputWriter(){
+        try {
+            File fileResult = new File("Lexical_analysis.out" );
+            if (fileResult.createNewFile()){
+                System.out.println("Output file created");
+            }
+            FileWriter fileWriter = new FileWriter(fileResult);
+            fileWriter.write(output);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (Exception e) {
+            throw new Error("File processing failed");
+        }
+    }
+
     public Symbol scan() throws Exception{
-        if(token != null)
-            System.out.println(token.toString());
-        token = getScanner().next_token();
-        return token;
+        if(cur_token!= null){
+            output = output + cur_token.toString() + '\n';
+            System.out.println(cur_token.toString());
+            if(cur_token.sym==0){
+                OutputWriter();
+                System.out.println(listID);
+            }
+        }
+        return getScanner().next_token();
     }
 
     public void report_error(String message, Object info) {
-    StringBuilder m = new StringBuilder("Error ");
+        StringBuilder m = new StringBuilder("Error ");
 
-    if (info instanceof java_cup.runtime.Symbol)
-      m.append( "("+info.toString()+")" );
-
-    m.append(" : "+message);
-
-    System.out.println(m);
-    }
+        if (info instanceof java_cup.runtime.Symbol)
+            m.append( "("+info.toString()+")" );
+            m.append(" : "+message);
+            System.out.println(m);
+            output += m;
+            OutputWriter();
+        }
 
     public void report_fatal_error(String message, Object info) {
-    report_error(message, info);
-    throw new RuntimeException("Fatal Syntax Error");
+        report_error(message, info);
+        throw new RuntimeException("Fatal Syntax Error");
     }
 :};
 
 terminal        VOID, BOOLEAN, INT, FLOAT;                                  // Type
-terminal        PLUS, MINUS, TIMES, DIV;                                    // Arithmetic Operators
+terminal        PLUS, MINUS, TIMES, DIV;                                    // Arithmetic Operators + - * /
 terminal        IF, ELSE, FOR, WHILE, BREAK, CONTINUE;                      // Keyword stmt
 terminal        RETURN;                                                     // Return Statement
-terminal        EQEQ, NOTEQ;                                                // Equality Operators
+terminal        EQEQ, NOTEQ;                                                // Equality Operators   == !=
 terminal        EQ;                                                         // Assignment Operator
-terminal        OROR, ANDAND, NOT;                                          // Logical Operators
-terminal        LT, GT, LTEQ, GTEQ;                                         // Relational Operators
+terminal        OROR, ANDAND, NOT;                                          // Logical Operators  || && !
+terminal        LT, GT, LTEQ, GTEQ;                                         // Relational Operators < > <= >=
 terminal        LBRACE, RBRACE, LPAREN, RPAREN, LBRACK, RBRACK, SEMI, COMMA;// Separators {}   ()   []   ;    ,
 
 terminal Integer    INTLITERAL;
-terminal java.lang.Boolean    BOOLLITERAL;
+terminal Boolean    BOOLLITERAL;
 terminal String     STRINGLITERAL, ID, COMMENT;
 terminal Float      FLOATLITERAL;
 
@@ -54,10 +77,9 @@ precedence left TIMES, DIV;
 precedence nonassoc NOT, LT, LTEQ, GT, GTEQ, EQEQ, NOTEQ;
 precedence left ELSE;
 
-//precedence left ELSE;
-
 start with program;
 
+// VC grammar
 program             ::= decl_list;
 
 decl_list           ::= func_decl decl_list
@@ -66,34 +88,39 @@ decl_list           ::= func_decl decl_list
 
 // declarations
 //func-decl           -> type identifier para-list compound-stmt
-func_decl           ::= type identifier para_list compound_stmt;
+func_decl           ::= type identifier:id para_list compound_stmt
+                        {: if( String.valueOf(id)==""); :};
 
 //var-decl            -> type init-declarator-list ";"
 var_decl            ::= type:t1 init_declarator_list SEMI;
 
 //init-declarator-list-> init-declarator ( "," init-declarator )*
-init_declarator_list::= init_declarator
-                    |   init_declarator_list COMMA init_declarator;
+init_declarator_list::= init_declarator:a {:System.out.println(a);:}
+                    |   init_declarator COMMA init_declarator_list;
 
 //init-declarator     -> declarator ( "=" initialiser )?
 init_declarator     ::= declarator
-                    |   declarator EQ initialiser;
+                    |   declarator:id EQ initialiser:var
+                        {:  RESULT = id;  :};
 
 //declarator          -> identifier
 //                    |  identifier "[" INTLITERAL? "]"
 declarator          ::= identifier
-                    |   identifier LBRACK RBRACK
-                    |   identifier LBRACK INTLITERAL RBRACK;
+                    |   identifier:name LBRACK RBRACK
+                        {: listID.add(String.valueOf(name)); RESULT = name; :}
+                    |   identifier:name LBRACK INTLITERAL RBRACK
+                        {: listID.add(String.valueOf(name)); RESULT = name;:};
 
 //initialiser         ::= expr
 //                    |  "{" expr ( "," expr )* "}"
 initialiser         ::= expr
                         |
-                        LBRACE expr_list RBRACE;
+                        LBRACE expr_list RBRACE
+                        {:RESULT = "list";:};
 
 expr_list           ::= expr
                         |
-                        expr_list COMMA expr;
+                        expr COMMA expr_list;
 // primitive types
 type                ::= VOID:t      {:RESULT = t;:}
                     |   BOOLEAN:t   {:RESULT = t;:}
@@ -101,7 +128,7 @@ type                ::= VOID:t      {:RESULT = t;:}
                     |   FLOAT:t     {:RESULT = t;:};
 
 // identifiers
-identifier          ::= ID;
+identifier          ::= ID:name {:RESULT = name;:};
 
 // statements
 //compound-stmt       ::= "{" var-decl* stmt* "}"
@@ -128,6 +155,10 @@ else_stmt           ::= ELSE stmt
 //for-stmt            -> for "(" expr? ";" expr? ";" expr? ")" stmt
 for_stmt            ::= FOR LPAREN expr_stmt expr_stmt expr_stmt RPAREN stmt;
 
+//expr_stmt           ::= expr? ";"
+expr_stmt           ::= expr SEMI
+                    |   SEMI;
+
 //while_stmt          ::= while "(" expr ")" stmt
 while_stmt          ::= WHILE LPAREN expr RPAREN stmt;
 
@@ -141,16 +172,13 @@ continue_stmt       ::= CONTINUE SEMI;
 return_stmt         ::= RETURN expr SEMI
                     |   RETURN SEMI;
 
-//expr_stmt           ::= expr? ";"
-expr_stmt           ::= expr SEMI
-                    |   SEMI;
 
 // expressions
 //expr                ::= assignment_expr
 expr                ::= assignment_expr;
 
 //assignment_expr     ::= ( cond_or_expr "=" )* cond_or_expr
-assignment_expr     ::= LPAREN cond_or_expr EQ RPAREN cond_or_expr
+assignment_expr     ::= cond_or_expr EQ assignment_expr
                     |   cond_or_expr;
 
 //cond_or_expr        ::= cond_and_expr
@@ -215,11 +243,16 @@ primary_expr        ::= identifier
                     |   identifier arg_list
                     |   identifier LBRACK expr RBRACK
                     |   LPAREN expr RPAREN
-                    |   INTLITERAL
+                    |   INTLITERAL:t
                     {: :}
-                    |   FLOATLITERAL
-                    |   BOOLLITERAL
-                    |   STRINGLITERAL;
+                    |   FLOATLITERAL:t
+                    |   BOOLLITERAL:t
+//                    {:try{
+//                        boolean b = (boolean)t;
+//                    }catch (Exception e){
+//                        System.out.println(e);
+//                        report_fatal_error("type error:", null);}:}
+                    |   STRINGLITERAL:t;
 
 //// parameters
 //para_list           ::= "(" proper_para_list? ")"
