@@ -47,4 +47,4 @@ sau đó compile chúng thành class trong thư mục `target/classes/`.
 Quá trình này sẽ đóng gói tất cả các java class vào file .jar. File jar sẽ được tạo trong thư mục
 `target/` với tên `vc_compiler.jar`. Sau đó ta có thể chạy với câu lệnh
 
-    java -jar target/vc_compiler-full-1.0-SNAPSHOT.jar <path-to-test-file>
+    java -jar target/vc_compiler.jar <path-to-test-file>
