@@ -21,7 +21,7 @@
 
 # Hướng dẫn chạy
 
-**Cách 1:**  
+## **Cách 1:**  
 Chạy file jar bằng cmd
 
 > java -jar vc_compiler.jar <path-to-input-file>
@@ -31,7 +31,7 @@ chạy. Sau đó sẽ suất output ra file `Lexical_analysis.out`. Trong file g
 phân loại được định dạng theo cú pháp:
 `Class: <tên phân loại> , Text: <từ tố>`
 
-**Cách 2:**  
+## **Cách 2:**  
 **Build chương trình trừ code bằng Maven:**
 
     mvn compile
