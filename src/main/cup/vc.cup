@@ -50,6 +50,7 @@ parser code  {:
     }
 :};
 
+// Định nghĩa bộ từ vựng
 terminal        VOID, BOOLEAN, INT, FLOAT;                                  // Type
 terminal        PLUS, MINUS, TIMES, DIV;                                    // Arithmetic Operators + - * /
 terminal        IF, ELSE, FOR, WHILE, BREAK, CONTINUE, RETURN;              // Keyword
@@ -87,7 +88,7 @@ precedence left ELSE;
 
 start with program;
 
-/* VC production rule */
+/* định nghĩa các luật sịnh */
 program             ::= decl_list;
 
 decl_list           ::= func_decl decl_list

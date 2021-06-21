@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] argv) {
-        /* Start the parser */
+        //set path to file analysis
         String file_path;
         if (argv.length == 0) {
             System.out.println("Enter path to process:");
@@ -12,6 +12,7 @@ public class Main {
         } else {
             file_path = argv[0];
         }
+
         try {
             VC_Lexical lex = new VC_Lexical(new FileReader(file_path));
             parser p = new parser(lex);
@@ -20,4 +21,6 @@ public class Main {
             e.printStackTrace();
         }
     }
+
+
 }
